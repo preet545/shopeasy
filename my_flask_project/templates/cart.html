@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart - Shop Easy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('product_list') }}">Products</a></li>
+                <li><a href="{{ url_for('register') }}">Register</a></li>
+                <li>
+                    <div class="cart-icon">
+                        <a href="{{ url_for('view_cart') }}">
+                            <i class="fa">&#xf07a;</i>
+                            <div id="cart-count" class="cart-count">{{ cart_count }}</div>
+                        </a>
+                    </div>
+                </li>
+            </ul>
+        </nav>
+    </header>
+    <div id="cart-page">
+        <h2>Cart Page</h2>
+        {% for item in cart %}
+        <div class="cart-item">
+            <img src="{{ item.image }}" alt="{{ item.name }}" class="cart-item-image">
+            <p>{{ item.name }} ${{ item.price }} <button onclick="removeFromCart({{ item.id }})">Remove From Cart</button></p>
+        </div>
+        {% endfor %}
+        <div class="checkout">
+            <button onclick="window.location.href='{{ url_for('checkout') }}'">Checkout</button>
+            <p>Total: ${{ total }}</p>
+        </div>
+    </div>
+    <script>
+        function removeFromCart(productId) {
+            fetch('{{ url_for("remove_from_cart") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ product_id: productId }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('cart-count').innerText = data.cart_count;
+                location.reload();
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>

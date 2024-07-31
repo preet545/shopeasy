@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('product_list') }}">Products</a></li>
+                <li><a href="{{ url_for('register') }}">Register</a></li>
+                <li><a href="{{ url_for('view_cart') }}">Cart</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div id="register-page">
+        <h2>Register</h2>
+        <form id="register-form" method="post">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+            <button type="submit">Register</button>
+            <button type="button" onclick="window.location.href='{{ url_for('home') }}'">Cancel</button> <!-- IH#5 -->
+        </form>
+        <p>By creating an account, you can track your orders and receive the best deals.</p> <!-- IH#1 -->
+        <p>We require an email to verify your account and send order updates.</p> <!-- IH#2 -->
+    </div>
+</body>
+</html>
