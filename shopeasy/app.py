@@ -1,6 +1,8 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
+import requests
 
 app = Flask(__name__)
+app.secret_key = 'your_secret_key'
 
 products = [
     {"id": 1, "name": "iPhone 14 Pro Max", "price": 999, "description": "The Apple iPhone 14 Pro Max features a stunning 6.7-inch Super Retina XDR display, the powerful A16 Bionic chip, and an advanced triple-camera system for professional-grade photography.", "image": "https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/refurb-iphone-14-pro-max-spaceblack-202404?wid=1144&hei=1144&fmt=jpeg&qlt=90&.v=1713200628539"},
@@ -33,13 +35,12 @@ def register():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
-        # Check if the email already exists
-        if any(user['email'] == email for user in users):
-            return jsonify({"message": "Email already registered"}), 400
-        # Encrypt password before storing (using a simple hash for demonstration)
-        encrypted_password = password[::-1]  # Simple reverse string as "encryption"
-        users.append({'email': email, 'password': encrypted_password})
-        return redirect(url_for('home'))
+        response = requests.post("http://localhost:5000/register", json={"email": email, "password": password})
+        if response.status_code == 201:
+            flash('Registration successful!', 'success')
+            return redirect(url_for('login'))
+        else:
+            flash('Registration failed. Email may already be registered.', 'danger')
     cart_count = len(cart)
     return render_template('register.html', cart_count=cart_count)
 
@@ -47,14 +48,28 @@ def register():
 def login():
     if request.method == 'POST':
         email = request.form['email']
-        password = request.form['password'][::-1]  # Simple reverse string as "encryption"
-        user = next((user for user in users if user['email'] == email and user['password'] == password), None)
-        if user:
+        password = request.form['password']
+        response = requests.post("http://localhost:5000/login", json={"email": email, "password": password})
+        if response.status_code == 200:
+            flash('Login successful!', 'success')
             return redirect(url_for('home'))
         else:
-            return jsonify({"message": "Invalid email or password"}), 400
+            flash('Login failed. Invalid email or password.', 'danger')
     cart_count = len(cart)
     return render_template('login.html', cart_count=cart_count)
+
+@app.route('/reset_password', methods=['GET', 'POST'])
+def reset_password():
+    if request.method == 'POST':
+        email = request.form['email']
+        response = requests.post("http://localhost:5000/reset_password", json={"email": email})
+        if response.status_code == 200:
+            flash('Password reset email sent!', 'success')
+            return redirect(url_for('login'))
+        else:
+            flash('Password reset failed. Email may not be registered.', 'danger')
+    cart_count = len(cart)
+    return render_template('reset_password.html', cart_count=cart_count)
 
 @app.route('/cart')
 def view_cart():
@@ -95,4 +110,4 @@ def remove_from_cart():
     return jsonify({"message": "Product removed from cart", "cart_count": len(cart)}), 200
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=8000)
