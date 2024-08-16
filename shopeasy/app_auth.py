@@ -39,13 +39,13 @@ def reset_password():
     email = request.json.get('email')
     if email not in users:
         return jsonify({"message": "Email not registered"}), 400
-    # Here you would normally send an email with a reset link
+    # To send a email with the reset link 
     return jsonify({"message": "Password reset link sent"}), 200
 
 @app.before_request
 def make_session_permanent():
     session.permanent = True
-    app.permanent_session_lifetime = 1800  # 30 minutes
+    app.permanent_session_lifetime = 1800 
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

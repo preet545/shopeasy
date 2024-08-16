@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
+
 <body>
     <header>
         <nav>
@@ -26,10 +28,11 @@
             </ul>
         </nav>
     </header>
+
     <!-- Home Page Content -->
     <div id="home-page">
         <h1>Welcome to Shop Easy</h1>
-        <p>Track your orders and receive the best deals by <a href="{{ url_for('register') }}">creating an account</a>.</p> <!-- IH#1 -->
+        <p>Track your orders and receive the best deals by <a href="{{ url_for('register') }}">creating an account</a>.</p>
         <p>Explore our wide range of products!</p>
         <div class="product-list">
             {% for product in products %}
@@ -38,7 +41,8 @@
                 <h3>{{ product.name }}</h3>
                 <p>{{ product.description }}</p>
                 <p>${{ product.price }}</p>
-                <button onclick="window.location.href='{{ url_for('product_detail', product_id=product.id) }}'">View Details</button>
+                <button onclick="window.location.href='{{ url_for('product_detail', product_id=product.id) }}'">View
+                    Details</button>
                 <button onclick="addToCart({{ product.id }})">Add to Cart</button>
             </div>
             {% endfor %}
@@ -46,4 +50,5 @@
     </div>
     <script src="{{ url_for('static', filename='scripts.js') }}"></script>
 </body>
+
 </html>

@@ -1,8 +1,12 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
 import requests
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'
+
+# Microservice URLs
+MICROSERVICE_B_URL = "http://127.0.0.1:5001"
+MICROSERVICE_C_URL = "http://127.0.0.1:5002"
+MICROSERVICE_D_URL = "http://127.0.0.1:5003"
 
 products = [
     {"id": 1, "name": "iPhone 14 Pro Max", "price": 999, "description": "The Apple iPhone 14 Pro Max features a stunning 6.7-inch Super Retina XDR display, the powerful A16 Bionic chip, and an advanced triple-camera system for professional-grade photography.", "image": "https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/refurb-iphone-14-pro-max-spaceblack-202404?wid=1144&hei=1144&fmt=jpeg&qlt=90&.v=1713200628539"},
@@ -35,12 +39,11 @@ def register():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
-        response = requests.post("http://localhost:5000/register", json={"email": email, "password": password})
-        if response.status_code == 201:
-            flash('Registration successful!', 'success')
-            return redirect(url_for('login'))
-        else:
-            flash('Registration failed. Email may already be registered.', 'danger')
+        if any(user['email'] == email for user in users):
+            return jsonify({"message": "Email already registered"}), 400
+        encrypted_password = password[::-1]  # Simple reverse string as "encryption"
+        users.append({'email': email, 'password': encrypted_password})
+        return redirect(url_for('home'))
     cart_count = len(cart)
     return render_template('register.html', cart_count=cart_count)
 
@@ -48,13 +51,12 @@ def register():
 def login():
     if request.method == 'POST':
         email = request.form['email']
-        password = request.form['password']
-        response = requests.post("http://localhost:5000/login", json={"email": email, "password": password})
-        if response.status_code == 200:
-            flash('Login successful!', 'success')
+        password = request.form['password'][::-1]
+        user = next((user for user in users if user['email'] == email and user['password'] == password), None)
+        if user:
             return redirect(url_for('home'))
         else:
-            flash('Login failed. Invalid email or password.', 'danger')
+            return jsonify({"message": "Invalid email or password"}), 400
     cart_count = len(cart)
     return render_template('login.html', cart_count=cart_count)
 
@@ -62,12 +64,11 @@ def login():
 def reset_password():
     if request.method == 'POST':
         email = request.form['email']
-        response = requests.post("http://localhost:5000/reset_password", json={"email": email})
-        if response.status_code == 200:
-            flash('Password reset email sent!', 'success')
-            return redirect(url_for('login'))
+        if any(user['email'] == email for user in users):
+            # Simulate sending reset link
+            return jsonify({"message": "Password reset link sent to email"}), 200
         else:
-            flash('Password reset failed. Email may not be registered.', 'danger')
+            return jsonify({"message": "Email not found"}), 404
     cart_count = len(cart)
     return render_template('reset_password.html', cart_count=cart_count)
 
@@ -108,6 +109,75 @@ def remove_from_cart():
     global cart
     cart = [item for item in cart if item["id"] != product_id]
     return jsonify({"message": "Product removed from cart", "cart_count": len(cart)}), 200
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
+import requests
+
+app = Flask(__name__)
+app.secret_key = 'your_secret_key'
+
+@app.route('/')
+def home():
+    try:
+        response = requests.get("http://127.0.0.1:5001/get_product_catalog")
+        if response.status_code == 200:
+            products = response.json()
+            return render_template('index.html', products=products)
+    except requests.exceptions.ConnectionError:
+        flash("Failed to connect to Microservice B", "danger")
+    return render_template('index.html', products=[])
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        response = requests.post("http://127.0.0.1:5002/register", json={"email": email, "password": password})
+        if response.status_code == 201:
+            flash('Registration successful!', 'success')
+            return redirect(url_for('login'))
+        else:
+            flash(response.json().get('error', 'Registration failed'), 'danger')
+    return render_template('register.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        response = requests.post("http://127.0.0.1:5002/login", json={"email": email, "password": password})
+        if response.status_code == 200:
+            flash('Login successful!', 'success')
+            return redirect(url_for('home'))
+        else:
+            flash(response.json().get('error', 'Login failed'), 'danger')
+    return render_template('login.html')
+
+@app.route('/cart')
+def view_cart():
+    try:
+        response = requests.get("http://127.0.0.1:5003/view_cart")
+        if response.status_code == 200:
+            cart_data = response.json()
+            return render_template('cart.html', cart=cart_data['cart'], total=cart_data['total'])
+    except requests.exceptions.ConnectionError:
+        flash("Failed to connect to Microservice D", "danger")
+    return render_template('cart.html', cart=[], total=0)
+
+@app.route('/checkout', methods=['POST'])
+def checkout():
+    try:
+        response = requests.post("http://127.0.0.1:5003/checkout")
+        if response.status_code == 200:
+            flash('Checkout successful!', 'success')
+        else:
+            flash(response.json().get('error', 'Checkout failed'), 'danger')
+    except requests.exceptions.ConnectionError:
+        flash("Failed to connect to Microservice D", "danger")
+    return redirect(url_for('view_cart'))
 
 if __name__ == '__main__':
     app.run(debug=True, port=8000)

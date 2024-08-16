@@ -5,7 +5,7 @@ base_url = 'http://localhost:5000'
 def test_register():
     url = f'{base_url}/register'
     payload = {
-        'email': 'test@example.com',
+        'email': 'patepree@example.com',
         'password': 'test123'
     }
     response = requests.post(url, json=payload)

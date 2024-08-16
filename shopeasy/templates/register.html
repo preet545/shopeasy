@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
+
 <body>
     <header>
         <nav>
@@ -25,10 +27,10 @@
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" required>
             <button type="submit">Register</button>
-            <button type="button" onclick="window.location.href='{{ url_for('home') }}'">Cancel</button> <!-- IH#5 -->
+            <button type="button" onclick="window.location.href='{{ url_for('home') }}'">Cancel</button>
         </form>
-        <p>By creating an account, you can track your orders and receive the best deals.</p> <!-- IH#1 -->
-        <p>We require an email to verify your account and send order updates.</p> <!-- IH#2 -->
+        <p>By creating an account, you can track your orders and receive the best deals.</p>
     </div>
 </body>
+
 </html>
